@@ -1,0 +1,48 @@
+body{
+    background-color: rgb(209, 163, 107);
+}
+/* Text Formatting styles */
+h1{
+    color: rgb(29, 168, 138);
+    background-color: rgb(148, 146, 41);
+    letter-spacing: 30px;
+    word-spacing: 10px;
+}
+p{
+    text-align: center;
+    text-transform: capitalize;
+    text-decoration: underline;
+    text-indent: 55px;
+    line-height: 2;
+}
+/* Box Model */
+h2{
+    color: cyan;
+    background-color: rgb(51, 73, 114);
+    height: 350px;
+    width: 1000px;
+    /* Padding */
+    padding-top: 50px;
+    padding-right: 50px;
+    padding-bottom: 50px;
+    padding-left: 50px;
+    /* Margins */
+    margin-top: 50px;
+    margin-right: 100px;
+    margin-bottom: 50px;
+    margin-left: 100px;
+    /* borders */
+    border-top: 10px double rgb(172, 172, 34);
+    border-right: 10px dotted red;
+    border-bottom: 10px groove black;
+    border-left: 10px solid green;
+}
+a{
+    color: rgb(184, 224, 40);
+    background-color: darkslategray;
+    text-decoration: none;
+    padding: 10px;
+}
+a:hover{
+    background-color: rgb(23, 122, 124);
+}

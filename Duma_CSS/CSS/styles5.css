@@ -1,0 +1,43 @@
+#flag{
+    position: relative;
+    width: 900px;
+    margin: 40px;
+}
+
+#division1{
+    background-color: black;
+    height: 150px;
+    width: 90%;
+}
+
+#division2{
+    background-color: white;
+    height: 20px;
+    width: 90%;
+}
+#division3{
+    background-color: red;
+    height: 150px;
+    width: 90%;
+}
+
+#division4{
+    background-color: white;
+    height: 20px;
+    width: 90%;
+}
+#division5{
+    background-color: green;
+    height: 150px;
+    width: 90%;
+}
+#main-shield{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-70%, -60%);
+    height: 200px;
+    width: 200px;
+    z-index: 600;
+    object-fit: contain;
+}
