@@ -1,15 +1,18 @@
 # import flask
 import base64
 from datetime import date
-
+from flask_cors import CORS
 from flask import *
 # importing pymysql
 import pymysql
 # importing the cursor from pymysql
 import pymysql.cursors
 
+# CORS = Cross Origin Resource Sharing
+
 # initialise the flask app
 app = Flask(__name__)
+CORS(app)
 
 import os
 app.config["UPLOAD_FOLDER"] = "static/images"
@@ -26,7 +29,7 @@ def signup():
     phone = request.form["phone"]
 
     # establishing a connection to our database
-    connection = pymysql.connect (user= "root", host= "localhost", password= "", database= "dumasokogarden")
+    connection = pymysql.connect (user="vicmakau", host="mysql-vicmakau.alwaysdata.net", password="modcom1234", database="vicmakau_sokogarden")
     
     # defining the cursor
     cursor = connection.cursor()
@@ -56,7 +59,7 @@ def signin():
         # print(email, password)
 
         # create/establish a connection to the database
-        connection = pymysql.connect(host= "localhost", user= "root", password= "", database= "dumasokogarden")
+        connection = pymysql.connect(host="mysql-vicmakau.alwaysdata.net", user="vicmakau", password="modcom1234", database="vicmakau_sokogarden")
 
         # create a cursor
         cursor = connection.cursor(pymysql.cursors.DictCursor)
@@ -106,7 +109,7 @@ def add_product():
     photo.save(photo_path)
         
     # establish a connection to the database
-    connection = pymysql.connect(user= "root", host= "localhost", password= "", database="dumasokogarden")
+    connection = pymysql.connect(user="vicmakau", host="mysql-vicmakau.alwaysdata.net", password="modcom1234", database="vicmakau_sokogarden")
 
     # define the cursor
     cursor= connection.cursor()
@@ -134,7 +137,7 @@ def add_product():
 def get_product_details ():
 
     # establish connection to the database
-    connection = pymysql.connect(user = "root", host = "localhost", password = "", database = "dumasokogarden")
+    connection = pymysql.connect(user ="vicmakau", host ="mysql-vicmakau.alwaysdata.net", password ="modcom1234", database ="vicmakau_sokogarden")
 
     # define the cursor
     cursor = connection.cursor(pymysql.cursors.DictCursor)
@@ -212,4 +215,4 @@ def mpesa_payment():
         print(response.text)
         return jsonify({"message": "Please Complete Payment in Your Phone and we will deliver in minutes"})
 # run the app
-app.run(debug= True)
+# app.run(debug= True) --- IGNORE ---
