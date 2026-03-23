@@ -1,0 +1,1096 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuxEstate - Premium Property Listings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a1a;
+            --accent: #d4af37;
+            --accent-hover: #b8941f;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .property-card:hover .property-image {
+            transform: scale(1.05);
+        }
+        .property-image {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-enter {
+            animation: modalSlide 0.3s ease-out forwards;
+        }
+        @keyframes modalSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .verified-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .payment-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .hero-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .nav-blur {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 overflow-x-hidden">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 nav-blur border-b border-gray-200 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="showSection('home')">
+                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-600 to-yellow-800 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-building text-white text-lg"></i>
+                    </div>
+                    <span class="text-2xl font-bold tracking-tight">Lux<span class="text-yellow-700">Estate</span></span>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <button onclick="showSection('home')" class="nav-link text-gray-700 hover:text-yellow-700 font-medium transition">Home</button>
+                    <button onclick="showSection('listings')" class="nav-link text-gray-700 hover:text-yellow-700 font-medium transition">Properties</button>
+                    <button onclick="showSection('companies')" class="nav-link text-gray-700 hover:text-yellow-700 font-medium transition">Companies</button>
+                </div>
+
+                <div class="flex items-center space-x-4" 
+
+id="authButtons">
+                    <button onclick="openModal('loginModal')" class="text-gray-700 hover:text-yellow-700 font-medium transition">Company Login</button>
+                    <button onclick="openModal('registerModal')" class="bg-gray-900 text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition transform hover:scale-105 font-medium">
+                        Register Company
+                    </button>
+                </div>
+
+                <div class="hidden items-center space-x-4" id="companyDashboard">
+                    <div class="flex items-center space-x-3 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <span class="font-medium text-gray-800" id="companyName">Company</span>
+                        <span class="verified-badge text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <i class="fas fa-check-circle text-xs"></i> Verified
+                        </span>
+                    </div>
+                    <button onclick="showSection('dashboard')" 
+
+class="bg-yellow-600 text-white px-5 py-2 rounded-full hover:bg-yellow-700 transition text-sm font-medium">
+                        Dashboard
+                    </button>
+                    <button onclick="logout()" class="text-gray-500 hover:text-red-600 transition">
+                        <i class="fas fa-sign-out-alt text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Home Section -->
+    <section id="home" class="section pt-20 min-h-screen">
+        <div class="relative h-[85vh] overflow-hidden">
+            <div class="absolute inset-0">
+                <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80" 
+                     class="w-full h-full object-cover" alt="Luxury Home">
+                <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent"></div>
+            </div>
+            
+            <div class="relative max-w-7xl mx-auto px-4 h-full flex items-center">
+                <div class="max-w-2xl text-white space-y-6 hero-content">
+                    <div class="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
+                        <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                        <span class="text-sm font-medium">Premium Verified Listings</span>
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-bold leading-tight">
+                        Discover Your <br>
+                        <span class="text-yellow-400 italic">Perfect Space</span>
+                    </h1>
+                    <p class="text-xl text-gray-200 max-w-lg leading-relaxed">
+                        Connect with verified premium housing companies. Schedule exclusive showroom visits and experience luxury living firsthand.
+                    </p>
+                    <div class="flex flex-wrap gap-4 pt-4">
+                        <button onclick="showSection('listings')" class="bg-yellow-600 text-white px-8 py-4 rounded-full hover:bg-yellow-700 transition transform hover:scale-105 font-semibold text-lg shadow-lg shadow-yellow-600/30">
+                            Explore Properties
+                        </button>
+                        <button onclick="openModal('registerModal')" class="bg-white/10 backdrop-blur-md text-white border-2 border-white/30 px-8 py-4 rounded-full hover:bg-white/20 transition font-semibold text-lg">
+
+                            List Your Property
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center space-x-8 pt-8 text-sm text-gray-300">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-shield-alt text-yellow-400"></i>
+                            <span>Verified Companies Only</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-calendar-check text-yellow-400"></i>
+                            <span>Instant Booking</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-lock text-yellow-400"></i>
+                            <span>Secure Payments</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="bg-white py-16 hero-pattern">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+
+                    <div class="space-y-2">
+                        <div class="text-4xl font-bold text-gray-900">500+</div>
+                        <div class="text-gray-600">Verified Companies</div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="text-4xl font-bold text-gray-900">12,000+</div>
+                        <div class="text-gray-600">Premium Listings</div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="text-4xl font-bold text-gray-900">50k+</div>
+                        <div class="text-gray-600">Showroom Visits</div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="text-4xl font-bold text-gray-900">98%</div>
+                        <div class="text-gray-600">Satisfaction Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Listings Section -->
+
+    <section id="listings" class="section hidden pt-24 pb-16 min-h-screen bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-4xl font-bold text-gray-900 mb-2">Featured Properties</h2>
+                    <p class="text-gray-600">Discover premium listings from verified housing companies</p>
+                </div>
+                
+                <div class="flex flex-wrap gap-3">
+                    <select id="filterType" onchange="filterListings()" class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 bg-white">
+                        <option value="all">All Types</option>
+                        <option value="apartment">Apartments</option>
+                        <option value="villa">Villas</option>
+                        <option value="penthouse">Penthouses</option>
+                        <option value="commercial">Commercial</option>
+                    </select>
+                    <select id="filterPrice" onchange="filterListings()" class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 bg-white">
+
+                        <option value="all">Any Price</option>
+                        <option value="0-500000">Under $500k</option>
+                        <option value="500000-1000000">$500k - $1M</option>
+                        <option value="1000000-5000000">$1M - $5M</option>
+                        <option value="5000000+">$5M+</option>
+                    </select>
+                    <button onclick="resetFilters()" class="px-4 py-2 text-gray-600 hover:text-yellow-700 transition">
+                        <i class="fas fa-undo mr-1"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <div id="listingsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Listings injected here -->
+            </div>
+            
+            <div id="noListings" class="hidden text-center py-20">
+                <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+                <p class="text-xl text-gray-600">No properties found matching your criteria</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Companies Section -->
+    <section id="companies" class="section hidden pt-24 pb-16 min-h-screen bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Verified Housing Companies</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">All companies undergo rigorous verification before listing properties. Look for the verified badge.</p>
+            </div>
+
+            <div id="companiesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Companies injected here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Company Dashboard -->
+    <section id="dashboard" class="section hidden pt-24 pb-16 min-h-screen bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">Company Dashboard</h2>
+                    <p class="text-gray-600">Manage your property listings and showroom bookings</p>
+                </div>
+
+                <button onclick="openModal('addListingModal')" class="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition flex items-center gap-2 shadow-lg">
+                    <i class="fas fa-plus"></i> Add New Listing
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Stats Cards -->
+                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-gray-500 text-sm">Total Listings</span>
+                            <i class="fas fa-home text-yellow-600"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-gray-900" id="dashTotalListings">0</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-gray-500 text-sm">Showroom Bookings</span>
+                            <i class="fas fa-calendar text-blue-600"></i>
+
+                        </div>
+                        <div class="text-3xl font-bold text-gray-900" id="dashTotalBookings">0</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-gray-500 text-sm">Revenue</span>
+                            <i class="fas fa-dollar-sign text-green-600"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-gray-900" id="dashRevenue">$0</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-gray-500 text-sm">Profile Views</span>
+                            <i class="fas fa-eye text-purple-600"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-gray-900">1,234</div>
+                    </div>
+                </div>
+
+                <!-- My Listings -->
+
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h3 class="font-semibold text-gray-900">My Property Listings</h3>
+                        </div>
+                        <div id="myListings" class="divide-y divide-gray-200 max-h-[600px] overflow-y-auto custom-scrollbar">
+                            <!-- My listings injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Bookings -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h3 class="font-semibold text-gray-900">Recent Bookings</h3>
+                        </div>
+                        <div id="recentBookings" class="divide-y divide-gray-200 max-h-[600px] overflow-y-auto custom-scrollbar p-4 space-y-3">
+                            <!-- Bookings injected here -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modals -->
+    
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('loginModal')"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden">
+                <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+                    <h3 class="text-xl font-bold">Company Login</h3>
+                    <button onclick="closeModal('loginModal')" class="text-gray-400 hover:text-white transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-8 space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Company Email</label>
+                        <input type="email" id="loginEmail" class="w-
+
+full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="company@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="loginPassword" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="••••••••">
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2 rounded text-yellow-600 focus:ring-yellow-600">
+                            <span class="text-gray-600">Remember me</span>
+                        </label>
+                        <a href="#" class="text-yellow-700 hover:underline">Forgot password?</a>
+                    </div>
+                    <button onclick="login()" class="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition font-semibold shadow-lg">
+                        Sign In
+                    </button>
+                    <p class="text-center text-sm text-gray-600">
+                        Don't have an account? <button 
+
+onclick="closeModal('loginModal'); openModal('registerModal')" class="text-yellow-700 font-semibold hover:underline">Register</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('registerModal')"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-enter overflow-hidden max-h-[90vh] overflow-y-auto">
+                <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-yellow-600 to-yellow-700 text-white">
+                    <div>
+                        <h3 class="text-xl font-bold">Register Company</h3>
+                        <p class="text-yellow-100 text-sm mt-1">Verification required before posting</p>
+                    </div>
+                    <button onclick="closeModal('registerModal')" class="text-yellow-100 hover:text-white transition">
+                        <i class="fas fa-times text-xl"></i>
+
+                    </button>
+                </div>
+                <div class="p-8 space-y-5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                            <input type="text" id="regCompanyName" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="Luxury Homes Inc">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Business Registration ID</label>
+                            <input type="text" id="regBusinessId" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="BR-123456">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Business Email</label>
+                        <input type="email" id="regEmail" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="contact@company.com">
+                    </div>
+                    <div>
+
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                        <input type="tel" id="regPhone" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="+1 (555) 123-4567">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="regPassword" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="Min 8 characters">
+                    </div>
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-info-circle mt-0.5"></i>
+                            <div>
+                                <p class="font-semibold mb-1">Verification Process</p>
+                                <p class="text-yellow-700">Your account will be reviewed within 24 hours. You'll receive an email once verified. Only verified companies can post listings.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="register()" class="w-full bg-yellow-600 text-white py-3 rounded-lg hover:bg-yellow-700 
+
+transition font-semibold shadow-lg">
+                        Submit for Verification
+                    </button>
+                    <p class="text-center text-sm text-gray-600">
+                        Already registered? <button onclick="closeModal('registerModal'); openModal('loginModal')" class="text-yellow-700 font-semibold hover:underline">Login</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Listing Modal -->
+    <div id="addListingModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('addListingModal')"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl modal-enter overflow-hidden max-h-[90vh] overflow-y-auto">
+                <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+                    <h3 class="text-xl font-bold">Add New Property</h3>
+                    <button onclick="closeModal('addListingModal')" 
+
+class="text-gray-400 hover:text-white transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-8 space-y-5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Property Title</label>
+                            <input type="text" id="listTitle" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="e.g., Modern Downtown Penthouse">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
+                            <select id="listType" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition">
+                                <option value="apartment">Apartment</option>
+                                <option value="villa">Villa</option>
+                                <option value="penthouse">Penthouse</option>
+                                <option value="commercial">Commercial</option>
+                                <option value="condo">Condominium</option>
+                            </select>
+
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                        <input type="text" id="listAddress" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="Full property address">
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Price ($)</label>
+                            <input type="number" id="listPrice" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="1,250,000">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Bedrooms</label>
+                            <input type="number" id="listBedrooms" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="3">
+                        </div>
+                        <div>
+
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
+                            <input type="number" id="listBathrooms" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="2">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="listDescription" rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="Describe the property features, amenities, and unique selling points..."></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Area (sq ft)</label>
+                            <input type="number" id="listArea" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="2,500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-
+
+gray-700 mb-2">Showroom Visit Fee ($)</label>
+                            <input type="number" id="listVisitFee" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="50" value="50">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
+                        <input type="url" id="listImage" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition" placeholder="https://example.com/image.jpg">
+                        <p class="text-xs text-gray-500 mt-1">Leave empty for random high-quality property image</p>
+                    </div>
+
+                    <button onclick="addListing()" class="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition font-semibold shadow-lg">
+                        Publish Listing
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking/Payment Modal -->
+
+    <div id="bookingModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('bookingModal')"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden">
+                <div class="payment-card p-6 text-white">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold">Book Showroom Visit</h3>
+                            <p class="text-blue-100 text-sm" id="bookingPropertyTitle">Property Title</p>
+                        </div>
+                        <button onclick="closeModal('bookingModal')" class="text-white/80 hover:text-white transition">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-md rounded-lg p-4 mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-blue-100">Visit Fee</span>
+                            <span class="text-2xl font-bold" id="bookingFee">$50</span>
+                        </div>
+                        <div class="text-xs text-blue-100">Includes guided tour and consultation</div>
+
+                    </div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                        <input type="date" id="bookingDate" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Time</label>
+                        <select id="bookingTime" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 transition">
+                            <option>09:00 AM</option>
+                            <option>10:00 AM</option>
+                            <option>11:00 AM</option>
+                            <option>02:00 PM</option>
+                            <option>03:00 PM</option>
+                            <option>04:00 PM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                        <input type="text" id="bookingName" class="w-full px-4 py-3 rounded-lg border border-gray-300 
+
+focus:outline-none focus:ring-2 focus:ring-blue-600 transition" placeholder="Full name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="bookingEmail" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 transition" placeholder="your@email.com">
+                    </div>
+                    
+                    <div class="border-t border-gray-200 pt-4 mt-4">
+                        <div class="flex justify-between mb-4 text-sm">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span class="font-semibold" id="paymentSubtotal">$50.00</span>
+                        </div>
+                        <div class="flex justify-between mb-4 text-sm">
+                            <span class="text-gray-600">Service Fee</span>
+                            <span class="font-semibold">$5.00</span>
+                        </div>
+                        <div class="flex justify-between text-lg font-bold text-gray-900 border-t border-gray-200 pt-2">
+                            <span>Total</span>
+                            <span id="paymentTotal">$55.00</span>
+                        </div>
+                    </div>
+
+                    <button onclick="processPayment()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition font-bold text-lg shadow-lg flex items-center justify-center gap-2">
+                        <i class="fas fa-lock"></i> Pay & Confirm Booking
+                    </button>
+                    <div class="flex justify-center gap-4 text-gray-400 text-2xl">
+                        <i class="fab fa-cc-visa"></i>
+                        <i class="fab fa-cc-mastercard"></i>
+                        <i class="fab fa-cc-amex"></i>
+                        <i class="fab fa-cc-apple-pay"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-4 rounded-lg shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <i class="fas fa-check-circle text-green-400 text-xl"></i>
+        <div>
+            <h4 class="font-semibold" id="toastTitle">Success</h4>
+            <p class="text-sm text-gray-300" 
+
+id="toastMessage">Operation completed</p>
+        </div>
+    </div>
+
+    <script>
+        // Data Store
+        let currentUser = null;
+        let currentBookingProperty = null;
+        
+        const companies = [
+            { id: 1, name: "Metropolitan Realty", email: "contact@metro.com", verified: true, logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop", listings: 45, rating: 4.9 },
+            { id: 2, name: "Luxury Living Group", email: "info@luxury.com", verified: true, logo: "https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=100&h=100&fit=crop", listings: 32, rating: 4.8 },
+            { id: 3, name: "Premier Estates", email: "hello@premier.com", verified: true, logo: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&h=100&fit=crop", listings: 28, rating: 4.7 },
+            { id: 4, name: "Skyline Properties", email: "book@skyline.com", verified: true, logo: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=100&h=100&fit=crop", listings: 56, rating: 4.9 },
+            { id: 5, name: "Golden Gate Homes", email: "sales@goldengate.com", verified: true, logo: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=100&h=100&fit=crop", listings: 19, rating: 4.6 },
+            { id: 6, name: "Urban Developments", email: "team@urban.com", verified: true, logo: "https://images.unsplash.com/photo-1448630360428-65456885c650?w=100&h=100&fit=crop", listings: 38, rating: 4.8 }
+        ];
+
+        let listings = [
+            { id: 1, companyId: 1, title: "Modern Downtown Penthouse", type: "penthouse", price: 2500000, address: "123 Skyline Ave, New York, NY", bedrooms: 3, bathrooms: 3, area: 2800, image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80", description: "Stunning penthouse with panoramic city views, private elevator, and rooftop terrace.", visitFee: 100, featured: true },
+            { id: 2, companyId: 2, title: "Seaside Villa Malibu", type: "villa", price: 4500000, address: "456 Ocean Drive, Malibu, CA", bedrooms: 5, bathrooms: 4, area: 4500, image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80", description: "Luxurious beachfront villa with infinity pool and direct beach access.", visitFee: 150, featured: true },
+            { id: 3, companyId: 3, title: "Historic Brownstone", type: "apartment", price: 1800000, address: "789 Beacon St, Boston, MA", bedrooms: 4, bathrooms: 2, area: 3200, image: "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=800&q=80", description: "Beautifully restored historic brownstone in prestigious Back Bay neighborhood.", visitFee: 75, featured: false },
+            { id: 4, companyId: 4, title: "Minimalist Loft", type: "apartment", price: 950000, address: "321 Arts District, Los Angeles, CA", bedrooms: 2, bathrooms: 2, area: 1800, image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80", description: "Industrial chic loft with 20ft ceilings and floor-to-ceiling windows.", visitFee: 50, featured: true },
+            { id: 5, companyId: 1, title: "Mountain Retreat", type: "villa", price: 3200000, address: "654 Alpine Way, Aspen, CO", bedrooms: 6, bathrooms: 5, area: 5500, image: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80", description: "Exclusive mountain estate with ski-in/ski-out access and heated outdoor pool.", visitFee: 125, featured: true },
+            { id: 6, companyId: 5, title: "Waterfront Condo", type: "condo", price: 1200000, address: "987 Bay Blvd, Miami, FL", bedrooms: 3, bathrooms: 2, area: 2100, image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80", description: "Contemporary waterfront living with marina access and smart home features.", visitFee: 60, featured: false }
+        ];
+
+        let bookings = [
+            { id: 1, propertyId: 1, userName: "John Smith", email: 
+
+"john@email.com", date: "2024-03-25", time: "10:00 AM", amount: 105, status: "confirmed" },
+            { id: 2, propertyId: 2, userName: "Sarah Johnson", email: "sarah@email.com", date: "2024-03-26", time: "02:00 PM", amount: 155, status: "pending" }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderListings();
+            renderCompanies();
+            updateDashboard();
+            
+            // GSAP Animations
+            gsap.registerPlugin(ScrollTrigger);
+            
+            gsap.from(".hero-content > *", {
+                y: 30,
+                opacity: 0,
+                duration: 1,
+                stagger: 0.2,
+                ease: "power3.out"
+            });
+        });
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            if (sectionId === 'dashboard' && !currentUser) {
+                openModal('loginModal');
+                return;
+            }
+            
+            window.scrollTo(0, 0);
+            
+            // Refresh data
+            if (sectionId === 'listings') renderListings();
+            if (sectionId === 'companies') renderCompanies();
+            if (sectionId === 'dashboard') updateDashboard();
+        }
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.body.style.overflow = '';
+
+        }
+
+        // Auth Functions
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showToast('Error', 'Please fill in all fields', 'error');
+                return;
+            }
+            
+            // Simulate login - match any company email
+            const company = companies.find(c => c.email === email);
+            if (company) {
+                currentUser = company;
+                document.getElementById('authButtons').classList.add('hidden');
+                document.getElementById('companyDashboard').classList.remove('hidden');
+                document.getElementById('companyDashboard').classList.add('flex');
+                document.getElementById('companyName').textContent = 
+
+company.name;
+                
+                closeModal('loginModal');
+                showToast('Welcome Back', `Logged in as ${company.name}`);
+                showSection('dashboard');
+            } else {
+                showToast('Error', 'Invalid credentials', 'error');
+            }
+        }
+
+        function register() {
+            const name = document.getElementById('regCompanyName').value;
+            const email = document.getElementById('regEmail').value;
+            const phone = document.getElementById('regPhone').value;
+            const businessId = document.getElementById('regBusinessId').value;
+            
+            if (!name || !email || !phone || !businessId) {
+                showToast('Error', 'Please fill in all required fields', 'error');
+                return;
+            }
+            
+            closeModal('registerModal');
+            showToast('Registration Submitted', 'Your company is under review. You will be notified within 24 hours.');
+
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('authButtons').classList.remove('hidden');
+            document.getElementById('companyDashboard').classList.add('hidden');
+            document.getElementById('companyDashboard').classList.remove('flex');
+            showSection('home');
+            showToast('Logged Out', 'See you soon!');
+        }
+
+        // Listing Functions
+        function renderListings(filteredListings = listings) {
+            const grid = document.getElementById('listingsGrid');
+            const noResults = document.getElementById('noListings');
+            
+            if (filteredListings.length === 0) {
+                grid.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+            
+            noResults.classList.add('hidden');
+
+            grid.innerHTML = filteredListings.map(listing => {
+                const company = companies.find(c => c.id === listing.companyId);
+                return `
+                    <div class="property-card bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 group cursor-pointer" onclick="viewProperty(${listing.id})">
+                        <div class="relative h-64 overflow-hidden">
+                            <img src="${listing.image}" class="property-image w-full h-full object-cover" alt="${listing.title}">
+                            <div class="absolute top-4 left-4">
+                                <span class="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold text-gray-800 uppercase tracking-wide">
+                                    ${listing.type}
+                                </span>
+                            </div>
+                            <div class="absolute top-4 right-4">
+                                <span class="verified-badge text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                    <i class="fas fa-check-circle"></i> Verified
+                                </span>
+                            </div>
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                                <p class="text-white font-semibold text-lg">$${listing.price.toLocaleString()}</p>
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-yellow-700 transition">${listing.title}</h3>
+                            <p class="text-gray-500 text-sm mb-4 flex items-center gap-1">
+                                <i class="fas fa-map-marker-alt text-yellow-600"></i> ${listing.address}
+                            </p>
+                            <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
+                                <span class="flex items-center gap-1"><i class="fas fa-bed"></i> ${listing.bedrooms} beds</span>
+                                <span class="flex items-center gap-1"><i class="fas fa-bath"></i> ${listing.bathrooms} bath</span>
+                                <span class="flex items-center gap-1"><i class="fas fa-ruler-combined"></i> ${listing.area} sqft</span>
+                            </div>
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <img src="${company.logo}" class="w-8 h-8 rounded-full object-cover" alt="${company.name}">
+                                    <span class="text-sm font-medium text-gray-700">${company.name}</span>
+                                </div>
+                                <button onclick="event.stopPropagation(); openBookingModal(${listing.id})" class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition text-sm font-semibold">
+
+                                    Book Visit $${listing.visitFee}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterListings() {
+            const type = document.getElementById('filterType').value;
+            const price = document.getElementById('filterPrice').value;
+            
+            let filtered = listings;
+            
+            if (type !== 'all') {
+                filtered = filtered.filter(l => l.type === type);
+            }
+            
+            if (price !== 'all') {
+                if (price === '0-500000') filtered = filtered.filter(l => l.price < 500000);
+                else if (price === '500000-1000000') filtered = filtered.filter(l => l.price >= 500000 && l.price < 1000000);
+                else if (price === '1000000-5000000') filtered = filtered.filter(l => l.price >= 1000000 && l.price < 5000000);
+                else if (price === '5000000+') filtered = filtered.filter(l => l.price >= 5000000);
+
+            }
+            
+            renderListings(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('filterType').value = 'all';
+            document.getElementById('filterPrice').value = 'all';
+            renderListings();
+        }
+
+        function viewProperty(id) {
+            // Could expand to full property view
+            openBookingModal(id);
+        }
+
+        // Company Functions
+        function renderCompanies() {
+            const grid = document.getElementById('companiesGrid');
+            grid.innerHTML = companies.map(company => `
+                <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl transition">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <img src="${company.logo}" class="w-12 h-12 rounded-full object-cover" alt="${company.name}">
+                            <div>
+                                <h3 class="font-bold text-gray-900">${company.name}</h3>
+
+                                <div class="flex items-center gap-1 text-sm text-gray-500">
+                                    <i class="fas fa-star text-yellow-400"></i>
+                                    <span>${company.rating}</span>
+                                    <span>(${company.listings} listings)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="verified-badge text-white text-xs px-2 py-1 rounded-full">
+                            <i class="fas fa-check"></i>
+                        </span>
+                    </div>
+                    <div class="space-y-2 text-sm text-gray-600 mb-4">
+                        <p><i class="fas fa-envelope mr-2 text-gray-400"></i> ${company.email}</p>
+                        <p><i class="fas fa-building mr-2 text-gray-400"></i> Real Estate & Development</p>
+                    </div>
+                    <button onclick="showSection('listings')" class="w-full border-2 border-gray-900 text-gray-900 py-2 rounded-lg hover:bg-gray-900 hover:text-white transition font-medium">
+                        View Listings
+                    </button>
+                </div>
+            `).join('');
+        }
+
+
+        // Dashboard Functions
+        function updateDashboard() {
+            if (!currentUser) return;
+            
+            const myListings = listings.filter(l => l.companyId === currentUser.id);
+            const myBookings = bookings.filter(b => {
+                const property = listings.find(l => l.id === b.propertyId);
+                return property && property.companyId === currentUser.id;
+            });
+            
+            document.getElementById('dashTotalListings').textContent = myListings.length;
+            document.getElementById('dashTotalBookings').textContent = myBookings.length;
+            document.getElementById('dashRevenue').textContent = '$' + myBookings.reduce((sum, b) => sum + b.amount, 0).toLocaleString();
+            
+            // Render my listings
+            const myListingsContainer = document.getElementById('myListings');
+            if (myListings.length === 0) {
+                myListingsContainer.innerHTML = '<div class="p-8 text-center text-gray-500">No listings yet. Add your first property!</div>';
+            } else {
+                myListingsContainer.innerHTML = myListings.map(listing => `
+                    <div class="p-4 flex items-center gap-4 hover:bg-gray-50 transition">
+                        <img src="${listing.image}" class="w-20 h-20 rounded-lg object-cover" alt="${listing.title}">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900">${listing.title}</h4>
+                            <p class="text-sm text-gray-500">$${listing.price.toLocaleString()} • ${listing.type}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Active</span>
+                                <span class="text-xs text-gray-500">${Math.floor(Math.random() * 50)} views today</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="text-gray-400 hover:text-blue-600 transition p-2"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteListing(${listing.id})" class="text-gray-400 hover:text-red-600 transition p-2"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+
+            }
+            
+            // Render bookings
+            const bookingsContainer = document.getElementById('recentBookings');
+            if (myBookings.length === 0) {
+                bookingsContainer.innerHTML = '<div class="text-center text-gray-500 py-8">No bookings yet</div>';
+            } else {
+                bookingsContainer.innerHTML = myBookings.map(booking => {
+                    const property = listings.find(l => l.id === booking.propertyId);
+                    return `
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <p class="font-semibold text-gray-900 text-sm">${booking.userName}</p>
+                                    <p class="text-xs text-gray-500">${property ? property.title : 'Unknown Property'}</p>
+                                </div>
+                                <span class="text-xs font-bold text-green-600">$${booking.amount}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                                <i class="far fa-calendar"></i> $
+
+{booking.date} • ${booking.time}
+                            </div>
+                            <span class="inline-block text-xs px-2 py-1 rounded-full ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                ${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function addListing() {
+            if (!currentUser) {
+                showToast('Error', 'Please login first', 'error');
+                return;
+            }
+            
+            const title = document.getElementById('listTitle').value;
+            const price = parseInt(document.getElementById('listPrice').value);
+            const type = document.getElementById('listType').value;
+            
+            if (!title || !price) {
+                showToast('Error', 'Please fill in required fields', 'error');
+                return;
+
+            }
+            
+            const newListing = {
+                id: listings.length + 1,
+                companyId: currentUser.id,
+                title: title,
+                type: type,
+                price: price,
+                address: document.getElementById('listAddress').value || 'Address TBD',
+                bedrooms: parseInt(document.getElementById('listBedrooms').value) || 0,
+                bathrooms: parseInt(document.getElementById('listBathrooms').value) || 0,
+                area: parseInt(document.getElementById('listArea').value) || 0,
+                description: document.getElementById('listDescription').value || 'No description provided',
+                visitFee: parseInt(document.getElementById('listVisitFee').value) || 50,
+                image: document.getElementById('listImage').value || `https://images.unsplash.com/photo-${['1600596542815-ffad4c1539a9', '1600585154340-be6161a56a0c', '1512917774080-9991f1c4c750', '1600047509807-bc8de64e6443'][Math.floor(Math.random() * 4)]}?w=800&q=80`,
+
+                featured: false
+            };
+            
+            listings.unshift(newListing);
+            closeModal('addListingModal');
+            showToast('Success', 'Property listing published successfully!');
+            
+            // Reset form
+            document.querySelectorAll('#addListingModal input, #addListingModal textarea').forEach(input => input.value = '');
+            
+            updateDashboard();
+        }
+
+        function deleteListing(id) {
+            if (confirm('Are you sure you want to delete this listing?')) {
+                listings = listings.filter(l => l.id !== id);
+                updateDashboard();
+                showToast('Deleted', 'Listing removed successfully');
+            }
+        }
+
+        // Booking Functions
+        function openBookingModal(propertyId) {
+            const property = listings.find(l => l.id === propertyId);
+            if (!property) return;
+            
+            currentBookingProperty = property;
+
+            document.getElementById('bookingPropertyTitle').textContent = property.title;
+            document.getElementById('bookingFee').textContent = '$' + property.visitFee;
+            document.getElementById('paymentSubtotal').textContent = '$' + property.visitFee + '.00';
+            document.getElementById('paymentTotal').textContent = '$' + (property.visitFee + 5) + '.00';
+            
+            // Set min date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('bookingDate').min = tomorrow.toISOString().split('T')[0];
+            
+            openModal('bookingModal');
+        }
+
+        function processPayment() {
+            const date = document.getElementById('bookingDate').value;
+            const time = document.getElementById('bookingTime').value;
+            const name = document.getElementById('bookingName').value;
+            const email = document.getElementById('bookingEmail').value;
+
+            
+            if (!date || !name || !email) {
+                showToast('Error', 'Please fill in all fields', 'error');
+                return;
+            }
+            
+            // Simulate payment processing
+            const button = document.querySelector('#bookingModal button');
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<div class="loader border-white border-t-transparent"></div> Processing...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                const newBooking = {
+                    id: bookings.length + 1,
+                    propertyId: currentBookingProperty.id,
+                    userName: name,
+                    email: email,
+                    date: date,
+                    time: time,
+                    amount: currentBookingProperty.visitFee + 5,
+                    status: 'confirmed'
+                };
+                
+                bookings.unshift(newBooking);
+                
+                closeModal('bookingModal');
+                showToast('Booking Confirmed!', `Showroom visit 
+
+booked for ${date} at ${time}`);
+                
+                button.innerHTML = originalContent;
+                button.disabled = false;
+                
+                // Reset form
+                document.querySelectorAll('#bookingModal input').forEach(input => input.value = '');
+            }, 2000);
+        }
+
+        // Toast Notification
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+            
+            const icon = toast.querySelector('i');
+            if (type === 'error') {
+                icon.className = 'fas fa-exclamation-circle text-red-400 text-xl';
+            } else {
+                icon.className = 'fas fa-check-circle text-green-400 text-xl';
+            }
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 4000);
+        }
+
+        // Close modals on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('[id$="Modal"]').forEach(modal => {
+                    if (!modal.classList.contains('hidden')) {
+                        closeModal(modal.id);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
