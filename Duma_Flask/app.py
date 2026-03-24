@@ -143,10 +143,20 @@ def get_product_details ():
     cursor = connection.cursor(pymysql.cursors.DictCursor)
 
     # defining the sql query
-    sql = "select * from product_details"
+    query = """
+SELECT 
+    product_details.*, 
+    users.username AS company_name,
+    users.role,
+    AVG(ratings.rating) AS avg_rating
+FROM product_details
+JOIN users ON product_details.user_id = users.user_id
+LEFT JOIN ratings ON product_details.product_id = ratings.product_id
+GROUP BY product_details.product_id
+"""
 
     # execute the sql query
-    cursor.execute(sql)
+    cursor.execute(query)
 
     # fetching all rows retrieved by  the sql query
     product_details = cursor.fetchall()
@@ -155,6 +165,31 @@ def get_product_details ():
     connection.close()
     # return a response to the user
     return jsonify(product_details)
+
+
+
+
+
+@app.route('/api/add_rating', methods=['POST'])
+def add_rating():
+    data = request.json
+
+    product_id = data.get("product_id")
+    rating = data.get("rating")
+
+    # establish connection to the database
+    connection = pymysql.connect(user ="vicmakau", host ="mysql-vicmakau.alwaysdata.net", password ="modcom1234", database ="vicmakau_sokogarden")
+
+    # define the cursor
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
+    cursor.execute(
+        "INSERT INTO ratings (product_id, rating) VALUES (%s, %s)",
+        (product_id, rating)
+    )
+    connection.commit()
+
+    return jsonify({"message": "Rating added successfully"})
 
 
 
